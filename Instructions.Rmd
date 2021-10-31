@@ -31,7 +31,7 @@ The text of your project document will provide a narrative structure around your
 
 ### Find data:
 
-Find two (!) datasets with one ID variable in common (e.g., dates, times, states, counties, countries, universities, athletes, zipcodes, movies/shows), both with at least 50 observations (i.e., rows) in each. Please think very carefully about whether it makes sense to combine your datasets! If you find one dataset with 50 medical patients and it has their age, and you find another dataset with 50 *different* patients that has their ages, it makes *no* sense to join them based on age (you would just be randomly pairing up different people's data who happened to be the same age).
+Find two (!) datasets with one ID variable in common (e.g., dates, times, states, counties, countries, universities, athletes, zipcodes, movies/shows), both with at least 50 observations (i.e., rows) in each. Please think very carefully about whether it makes sense to combine your datasets! If you find one dataset with 50 medical patients and it has their age, and you find another dataset with 50 *different* patients that has th  eir ages, it makes *no* sense to join them based on age (you would just be randomly pairing up different people's data who happened to be the same age).
 
 When combined, the resulting/final dataset must have **at least 4 different variables (at least 3 numeric) in addition to the common variable** (i.e., five variables total).
 
@@ -52,7 +52,7 @@ data2 <- read_csv("https://some.website/dataset2.csv")
 
 ### Guidelines
 
-1. If the datasets are not tidy, you will need to reshape them so that every observation has its own row and every variable its own column. If the datasets are both already tidy, you will make them untidy with `pivot_wider()/spread()` and then tidy them again with `pivot_longer/gather()` to demonstrate your use of the functions. It's fine to wait until you have your descriptives to use these functions (e.g., you might want to `pivot_wider()` to rearrange the data to make your descriptive statistics easier to look at in tabular form); it's fine long as you use them at least once!
+1. If the datasets are not tidy, you will need to reshape them so that every observation has its own row and every variable its own   column. If the datasets are both already tidy, you will make them untidy with `pivot_wider()/spread()` and then tidy them again with `pivot_longer/gather()` to demonstrate your use of the functions. It's fine to wait until you have your descriptives to use these functions (e.g., you might want to `pivot_wider()` to rearrange the data to make your descriptive statistics easier to look at in tabular form); it's fine long as you use them at least once!
 
     - Depending on your datasets, it might be a good idea to do this before joining. For example, if you have a dataset you like with multiple measurements per year, but you want to join by year, you could average over your numeric variables to get means/year, do counts for your categoricals to get a counts/year, etc.
     
@@ -68,7 +68,7 @@ data2 <- read_csv("https://some.website/dataset2.csv")
 
     - Use *all six* core `dplyr` functions (`filter, select, arrange, group_by, mutate, summarize`) to manipulate and explore your dataset. For mutate, create a  new variable that is a function of at least one other variable, preferably using a dplyr vector function (see dplyr cheatsheet). It's totally fine to use the `_if`, `_at`, `_all` versions of mutate/summarize instead (indeed, it is encouraged if you have lots of variables). Use a `stringr` function such as str_detect or str_replace_all with regex at least once.
     
-    - Using `dplyr`, create summary statistics (`mean, sd, var, n, quantile, min, max, n_distinct, cor`, etc) for each of your numeric variables. If you have lots of numeric variables (e.g., 10+), pick a few that are of interest and just summarize based on those. For your categorical variables, report the frequencies/counts of each level. Finally, report the number of missing values (NAs) for each variable.
+    - Using `dplyr`, create summary statistics (`mean, sd, var, n, quantile, min, max, n_distinct, cor`, etc) for each of your numeric variables. If you have lots of numeric variables (e.g., 10+), pick a few that are of interest and just summarize based on those. For your categorical variables, report the frequencies/counts of each level. Finally, report the number of missing values (NAs) for each variable. 
     
     - Compute these statistics both overall and after grouping by one or more categorical variables (either together or one-at-a-time; if you have two categorical variables, include at least one statistic based on a grouping of two categorical variables simultaneously). If you do not have any categorical variables, create one using mutate (e.g., with `case_when` or `ifelse`) to satisfy the `group_by` requirements above. Compute at least one summary stat with a user-defined function rather than a built-in one. 
     

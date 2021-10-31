@@ -19,16 +19,36 @@ tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
 
 ## Data Wrangling, Exploration, Visualization
 
-### Name and EID here
+### Shriman Sonti sps2759
 
 #### Introduction 
 
-Paragraph or two introducing your datasets and variables, why they are interesting to you, etc.
+*I chose this dataset because I am a massive American Football fan, I've been watching since I was 4 years old. On top of that, I enjoy observing and analyzing data. So when I have the chance to look at data from football, I'll take that opportunity. These datasets have the players who ran the ball from the year of 2019 and 2020 with multiple columns showing their attempted runs, rushing yards, yards per attempt, Touchdowns, etc. Right now there are two variables which house each years dataset, and underneath each is a loop adding a ".2019" or a ".2020" to each column header in each dataset. This is because when we join the datasets, we can have a distinction between the 2019 statistics and the 2020 statistics and also for readability. However, I make sure not to add the 2019 or 2020 mark to the player column because it makes merging more difficult and most of the time the NFL isn't going to change too many players over the span of one year. To obtain this dataset, I simply went to the NFL website and navigated to the rushing stats page. It was eerily simple to get the data I wanted into the form I wanted.*
 
 ```{R}
 # read your datasets in here, e.g., with read_csv()
-
+library(tidyverse)
+data2019 <- read_csv("2019 Rushing.csv")
+for(i in colnames(data2019))
+{
+  if(i != "Player")
+  {
+    names(data2019)[names(data2019) == i] <- paste(i, ".2019", sep = "")
+  }
+}
+data2020 <- read_csv("2020 Rushing.csv")
+for(i in colnames(data2020))
+{
+  if(i != "Player")
+  {
+    names(data2020)[names(data2020) == i] <- paste(i, ".2020", sep="")
+  }
+}
+head(data2019)
+head(data2020)
 ```
+
+
 
 #### Tidying: Reshaping
 
@@ -36,55 +56,186 @@ If your datasets are tidy already, demonstrate that you can reshape data with pi
 
 ```{R}
 # your tidying code (if applicable; can also wait until wrangling section)
+
+#Showing I can untidy my data using pivot_wider in both datasets
+data2019 <- data2019 %>% distinct() %>% pivot_wider(names_from = "Player", values_from = "YDS.2019")
+data2020 <- data2020 %>% distinct() %>% pivot_wider(names_from = "ATT.2020", values_from = "YDS.2020")
+#Showing I can tidy my data using pivot_longer in both data sets, using relocate to move the columns to the desired location
+data2019 <- data2019 %>% pivot_longer(17:334, names_to = "Player", values_to = "YDS.2019", values_drop_na = TRUE) %>% relocate(Player, .after = "Rank.2019") %>% relocate(YDS.2019, .after = "ATT.2019")
+data2020 <- data2020 %>% pivot_longer(17:117, names_to = "ATT.2020", values_to = "YDS.2020", values_drop_na = TRUE) %>% relocate(ATT.2020, .after = "Player") %>% relocate(YDS.2020, .after = "ATT.2020")
+
+
+
+
 ```
 
+*This snippet messes up the data set and then rearranges it back to normal to show my prowess with pivot_longer and pivot_wider. We start with pivot_wider and we have a distinct() function so the NA's get dropped and we only have values. Then we pivot_longer to revert our data to the correct spot while dropping na's. Then we relocate both of the new columns we've created to their original location.*
     
 #### Joining/Merging
 
 ```{R}
 # your joining code
+#joins based on Players and relocates rank columns to be next to one another
+full_data <- data2019 %>% full_join(data2020, by = c("Player")) %>% relocate(Rank.2020, .after = "Rank.2019")
+head(full_data)
 
-# your joining code
+
+#total observations/rows in each dataset 
+paste("Amount of rows in data2019:",  nrow(data2019))
+paste("Amount of rows in data2020:",  nrow(data2020))
+
+#unique ID's(Players) in each dataset
+distinct_val_2019 <- distinct(data2019, Player)
+distinct_val_2020 <- distinct(data2020, Player)
+
+
+#ID's that appear in one dataset but not the other, and what those are
+players_in_2019_not_2020 <- data2019 %>% anti_join(data2020, by = c("Player"))
+players_in_2020_not_2019 <- data2020 %>% anti_join(data2019, by = c("Player"))
+head(players_in_2019_not_2020)
+head(players_in_2020_not_2019)
+
+#ID's that are common between both data sets
+players_in_both <- data2019 %>% semi_join(data2020, by = c("Player"))
+
+# full_data number of columns
+paste("Amount of rows in combined dataset:", nrow(full_data))
+
+
+
+
 ```
 
-Discussions of joining here. Feel encouraged to break up into more than once code chunk and discuss each in turn.
+*I chose to utilize a full join because I wanted to see the overall yards and rankings between players in those two years. By using this method, I'm able to see which running backs did better, the same, or worse through the two years. Obviously, some that dropped more than 20 places were most likely injured at some point during the season. The way I full joined was by creating a new variable called fulldata and I piped the full join between the 2019 and 2020 datasets into it based off of the Players column in both data frames. I then relocated the rankings for the 2020 dataset to be next to the 2019 dataset so it was easier to see how the players did on a year to year basis. By using the nrow() function I was able to figure out that there are 317 rows/observations in the 2019 rushing leaders data set and there are 276 rows/observations in the 2020 dataset. *
+*The distinct() feature came in handy when trying to figure out if there are repeats within the datasets. This is a statistics sheet, so that means there are many statistics per one player. Unless there are two players with the same name, we shouldn't have duplicates in the player column. Luckily for us there aren't so this means that the amount of unique IDs/players is the exact same count as the amount of rows/observations within each dataset. With 317 rows/observations in the 2019 dataset and 276 rows/observations in the 2020 dataset.*
+*There are 48 players who appear in the 2019 dataset that don't appear in the 2020 dataset, and there are 7 players who appear in the 2020 dataset that don't appear in the 2019 dataset. Due to there being too many players, I can't list them all here but the dataset is printed above. The reason why 2019 has players that don't appear in 2020 is due to the fact that players retired before the 2020 season or opted out becuase of COVID. The 2020 players that don't appear in 2019 are just rookie players that were in college the year prior or not in the NFL.*
+*There are 269 rows/observations that are in both the 2019 and 2020 dataset, these are players who had statistics from 2019 and again played in 2020.*
+*There are 324 observations within the combined dataset. Since there are 317 observations in the 2019 dataset, and 276 observations in the 2020 dataset, having a combined dataset with more than either amount is a good sign. This means that there were only 7 extra players within the 2020 season that had no statistics from the year prior. Which makes sense, very rarely will players have absolutely no data, even if they're a rookie. I don't believe any observations were dropped because I did a full_join, so we get every single observation. Nothing gets dropped, if anything, we get more data to draw conclusions off of.*
 
 ####  Wrangling
 
 ```{R}
 # your wrangling code
+library(kableExtra)
 
-# your wrangling code
+#dplyr: mutate, using to find how many yards on average it took to score a touchdown
+full_data_with_YDSTD <- full_data %>% mutate("YDS/TD.2019" = YDS.2019/TD.2019, "YDS/TD.2020" = YDS.2020/TD.2020) %>% relocate("YDS/TD.2019", .after= TD.2019) %>% relocate("YDS/TD.2020", .after= TD.2020)
+head(full_data_with_YDSTD)
 
-# your wrangling code
+#dplyr: filter and stringr function, using commands together to get players only 
+#on the Indianapolis Colts
+colts_rushing <- full_data %>% filter(str_detect(Player, ".*(IND)")) %>% kable(digits = 2, align = 'clccccc')
+colts_rushing
+
+
+#dplyr: select and arrange, using commands together to find the player with the 
+#most amount of rushing yards and their respective rank in 2019 and 2020
+most_rushing_yds_2019 <- full_data %>% select(Rank.2019,Player,YDS.2019) %>% arrange(desc(YDS.2019))
+head(most_rushing_yds_2019)
+most_rushing_yds_2020 <- full_data %>% select(Rank.2020,Player,YDS.2020) %>% arrange(desc(YDS.2020))
+head(most_rushing_yds_2020)
+
+
+#Summarising using 5 functions(mean, sd, min, max, median) on the yards 2019 
+YDS2019summary <- full_data %>% filter(Rank.2019 <= 35) %>% summarise(meanYDS2019 = mean(YDS.2019, na.rm = T), sdYDS2019 = sd(YDS.2019, na.rm = T), minYDS2019 = min(YDS.2019, na.rm = T), maxYDS2019 = max(YDS.2019, na.rm = T), medianYDS2019 = median(YDS.2019, na.rm = T))
+YDS2019summary
+
+#Summarising using 5 functions(mean, sd, min, max, median) on the Touchdowns 2019 
+TDS2019summary <- full_data %>% filter(Rank.2019 <= 35) %>% summarise(meanTD2019 = mean(TD.2019, na.rm = T), sdTD2019 = sd(TD.2019, na.rm = T), minTD2019 = min(TD.2019, na.rm = T), maxTD2019 = max(TD.2019, na.rm = T), medianTD2019 = median(TD.2019, na.rm = T))
+TDS2019summary
+
+#Summarising using 5 functions(mean, sd, min, max, median) on the yards 2020 
+YDS2020summary <- full_data %>% filter(Rank.2020 <= 35) %>% summarise(meanYDS2020 = mean(YDS.2020, na.rm = T), sdYDS2020 = sd(YDS.2020, na.rm = T), minYDS2020 = min(YDS.2020, na.rm = T), maxYDS2020 = max(YDS.2020, na.rm = T), medianYDS2020 = median(YDS.2020, na.rm = T))
+YDS2020summary
+
+#Summarising using 5 functions(mean, sd, min, max, median) on the Touchdowns 2020
+TDS2020summary <- full_data %>% filter(Rank.2020 <= 35) %>% summarise(meanTD2020 = mean(TD.2020, na.rm = T), sdTD2020 = sd(TD.2020, na.rm = T), minTD2020 = min(TD.2020, na.rm = T), maxTD2020 = max(TD.2020, na.rm = T), medianTD2020 = median(TD.2020, na.rm = T))
+TDS2020summary
+
+#Finding all NA values in each column, all 2019 columns have 7 NA's and all 2020 columns have 48 NA's.
+NAs_per_variable <- full_data %>% summarise_all(funs(sum(is.na(.))))
+NAs_per_variable
+
+
+##Summarising using group_by based on Player
+
+full_data_team <- full_data %>% separate(Player, into = c("Player", "Team"), sep = "\\(") %>% separate(Team, into = c("Team", NA), sep = "\\)") 
+
+#Obtaining counts of players per team
+count_of_players_perteam <- full_data_team %>% group_by(Team) %>% summarise(count = n())
+count_of_players_perteam
+
+#Using group_by to get mean yds, max yds, and count of running backs for teams in 2019 and 2020
+team_YDS2019 <- full_data_team %>% group_by(Team) %>% filter(Rank.2019 <= 50) %>% summarise(team_mean_YDS_2019 = mean(YDS.2019), team_max_YDS_2019 = max(YDS.2019), running_back_count = n())
+head(team_YDS2019)
+
+team_YDS2020 <- full_data_team %>% group_by(Team) %>% filter(Rank.2020 <= 50) %>% summarise(team_mean_YDS_2020 = mean(YDS.2020), team_max_YDS_2020 = max(YDS.2020), running_back_count = n())
+head(team_YDS2020)
+
+#Using group_by to get mean tds, max tds, and count of running backs for teams in 2019 and 2020
+team_TDS2019 <- full_data_team %>% group_by(Team) %>% filter(Rank.2019 <= 50) %>% summarise(team_mean_TD_2019 = mean(TD.2019), team_max_TD_2019 = max(TD.2019), running_back_count = n())
+head(team_TDS2019)
+
+team_TDS2020 <- full_data_team %>% group_by(Team) %>% filter(Rank.2020 <= 50) %>% summarise(team_mean_TD_2020 = mean(TD.2020), team_max_TD_2020 = max(TD.2020), running_back_count = n())
+head(team_TDS2020)
+
+#Using own method to find out how many miles a running back ran in a season
+converting_to_miles <- function(value)
+{
+  tempVal <- value*0.000568182
+  return(tempVal)
+}
+
+miles_ran_per_player <- full_data_team %>% group_by(Player) %>% summarise(miles_ran_2019 = converting_to_miles(YDS.2019), miles_ran_2020 = converting_to_miles(YDS.2020)) %>% arrange(desc(miles_ran_2020))
+head(miles_ran_per_player)
+
 ```
 
-Your discussion of wrangling section here. Feel encouraged to break up into more than once code chunk and discuss each in turn.
+
+
+
+
+*There were multiple different ways I decided to wrangle my data to find other data. I found yards per touchdown, then I found rushing leaders for just one team, I then found the most amount of rushing yards per year. After that, I had summary tables dealing with rushing yards in 2019 and 2020 and touchdowns in 2019 and 2020. I then separated the player name from team and found statistic summary tables again for rushing yards and touchdowns in 2019 and 2020, but this time I based it off each team. Finally, I created my own function that turned yards into miles and I applied that to every player.*
+*Most of the data was pretty mediocre and predictable, however, I did find a few things interesting. One thing that was interesting was that the player with the most rushing yards in 2019 wasn't the highest ranked player. In 2019, Derrick Henry had the most rushing yards at 1540 and yet Christian McCaffrey, who had the 3rd most yards rushing at 1387 was first overall. This means that Christian McCaffrey was more of a dual threat running back, which meant that he also caught passes. His total impact must have been more than the others. The other statistic that caught my eye was the function I created that turned all yards into miles. I never realized it, but over the span of a season a normal running back doesn't run more than a mile with the football. Since the running back does the most running with the football, this means that no other player on the field runs with the football for more than a mile. When thought about in a macro perspective, it makes sense. Football is a game of inches, and a football field is only 100 yards. Running a mile with the ball is near impossible with professional defenses stopping a running back. However, it's not really a statistic that a person thinks about, so when I first saw it my initial reaction was surprise, then realization. Other than these two statistics, all of the other summary statistics make quite a bit of sense, but it was fun to create and observe nonetheless.*
+
 
 
 #### Visualizing
 
 ```{R}
 # your plot 1
+library(ggplot2)
+#Has 2 geom layers(geom_point and geom_text), 2 aes mappings, tick marks are adjusted, modified default theme
+full_data_team_sig_values <- full_data_team %>% filter(Rank.2019 <= 35 & Team != "FA")
+ggplot(full_data_team_sig_values, aes(Team, YDS.2019, color = YDS.2019 > 1000, label = Player)) + geom_point() + theme(legend.position = "none", plot.title = element_text(size = rel(2))) + labs(title = "Top 35 rushing leaders by team in 2019") + ylab("Rushing Yards in 2019") + scale_y_continuous(breaks = c(0,100,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600)) + geom_text(size = 3, vjust = 2, hjust = 0.6)
+
 ```
 
-Your discussion of plot 1
+*This plot depicts the top 35 rushing leaders by team in 2019, the orange dots show players who ran for less than 1000 yards and the blue dots show players who ran for over 1000 yards. This is just a scatterplot to show which teams utilized the running game during the 2019 NFL season. Teams with players who ran for over 1000 yards normally have a quarterback who isn't that amazing at throwing the ball, while teams with less than 1000 yards have better quarterbacks. The best example of this trend is the difference in rushing yards between James White of the New England Patriots(NE) and Derrick Henry(TEN). New England has Tom Brady, who is arguably one of the best passers of all time, this basically means the run game isn't used at all. In Tenessee, the quarterback is Ryan Tannehill. While not terrible, he isn't that amazing at throwing the ball so Derrick Henry gets many carries for the team. This trend holds as we move up the graph. Teams like LAR(Los Angeles Rams) and NO(New Orleans Saints) have amazing quarterbacks who have strong arms, so obviously the running backs are utilized less. As we move up more we have quarterbacks like Jacoby Brissett(IND) and Daniel Jones(NYG), who's arms aren't that strong and their field presence is lacking. Therefore, those teams use their running backs more often, meaning that they're more likely to have 1000 yard rushers on their team.*
+
 
 ```{R}
 # your plot 2
+
+full_data_team_filtered <- full_data_team %>% filter(TD.2020 != 0 & Team != "FA")
+ggplot(full_data_team_filtered, aes(Team, TD.2020, label = Player)) + geom_boxplot() + geom_point() + theme(axis.text.x = element_text(angle = 90)) + scale_y_continuous("Touchdowns in 2020", breaks = c(0,2,4,6,8,10,12,14,16,18,20)) + labs(title = "Touchdowns per team in 2020")
 ```
 
-Your discussion of plot 2
+*This plot depicts a box and whisker plot for the average amount of touchdowns each teams running back's scored in 2020. As we can see any team that had more than one running back score a touchdown had a chart created for them. Some teams like New England, New Orleans, and Cincinnati had only one running back on the team score a touchdown. Most teams had a pretty even spread of running backs scoring touchdowns from anywhere between 2 and 4. Also, most of the data aligns with the rushing yards, the more rushing yards a team had, the higher their mean was. The Las Vegas Raiders (LV) had 4 running backs score at touch down on their team. Two for the top and bottom point and two inside the IQR, which is insane considering their best running back was ranked 8th in rushing yards. This means they must have had specific backs to run the ball in to the end zone from short distance because they're a lot bigger and slower. Another trend that was interesting was that no team had an outlier except for San Francisco(SF). Understandably, SF had a bad season with a losing record, their running back was ranked 26th and yet the amount of touchdowns he put up was closer to top 15 status. *
+
+
 
 ```{R}
 # your plot 3
+top_4_YDSATT2020 <- full_data_team %>% group_by(Team) %>% filter(FPTS.2020 != 0) 
+ggplot(top_4_YDSATT2020, aes(Team, FPTS.2020), color = Team) + geom_bar(aes(fill = Team), stat = "summary", fun = mean) +theme(legend.position = "none") + geom_errorbar(stat = "summary", fun.data = mean_se) + scale_y_continuous("Fantasy Points in 2020") + labs(title = "Fantasy Points per team in 2020") + theme(axis.text.x = element_text(angle = 90))
 ```
 
-Your discussion of plot 3
+*This plot depicts the average amount of fantasy points a team's running backs put up in the season. Fantasy points are apart of fantasy football, where participants are "owners" of virtual football teams. Participants will draft players from the NFL to be apart of their virtual team and those players in the NFL will play every week and gain points for a participants team. Every week two participants compete and the team with the most amount of points by the end of the week will be the winner of that week. It's extremely popular, and people take it extremely seriously to the point where extreme amounts of money is involved. People have made livings off of this concept as well. If a particular running back does well in a given week, then they will receive more fantasy points while if they do poorly they will receive less. In this chart there is also the standard error bar, which shows how accurate a mean is to the true mean. For most of the teams it is very volatile because not all the running backs on each team perform well. The most surprising team is GB(Green Bay) considering that their running backs had less rushing yards and less touchdowns than the top 4 running backs, they still put up crazy amounts of fantasy points. Another team that did very well is the Jacksonville Jaguars(JAC), their team only won one game the whole season and yet the amount of fantasy points their running backs put up was comparable to the Indianapolis Colts who had the 3rd most rushing yards in the season. Sometimes a teams overall performance can cover up the micro techniques a team does well.*
 
 #### Concluding Remarks
 
-If any!
+*Overall, there wasn't a big goal I was attempting to find when putting these charts together and wrangling the data. It was many small discoveries within the data that caught my attention. Many times, I get caught up too much with how each team is doing overall, that I don't get to correctly assess what each teams' strengths and weaknesses are. In the game of football there is much data to clean and analyze, the running game is arguably one of the more important aspects of football. After hours of cleaning, analyzing, and building charts, I'm able to come to a conclusions on many players' and teams' mishaps and dominance. Football has been in my life forever, and having the chance to combine my knowledge in R with my knowledge in football has been quite pleasurable.*
 
 
 
